@@ -3,4 +3,4 @@ __pycache__/
 .env
 *.pkl
 data/
-nvim2.md
+notes2.md
