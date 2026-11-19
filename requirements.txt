@@ -1,2 +1,5 @@
 influxdb3-python
 pandas
+requests
+matplotlib
+numpy
