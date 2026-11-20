@@ -7,6 +7,8 @@ client = InfluxDBClient3(
     token="dev",          # ignored when auth is off
 )
 
+
+
 # write one point
 point = (
     Point("vehicle_telemetry")
