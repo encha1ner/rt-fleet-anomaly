@@ -1,28 +1,20 @@
-from datetime import datetime, timezone
-from influxdb_client_3 import InfluxDBClient3, Point
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+from influxdb_client_3 import InfluxDBClient3
+
+ENV_PATH = Path(__file__).parent / ".env"
+print("looking for .env at:", ENV_PATH, "| exists:", ENV_PATH.exists())
+
+load_dotenv(ENV_PATH, encoding="utf-8-sig")
+print("INFLUX_HOST =", os.getenv("INFLUX_HOST"))
 
 client = InfluxDBClient3(
-    host="http://localhost:8181",
-    database="fleet",
-    token="dev",          # ignored when auth is off
+    host=os.environ["INFLUX_HOST"],
+    database=os.environ["INFLUX_DATABASE"],
+    token=os.environ["INFLUX_TOKEN"],
 )
 
 
-
-# write one point
-point = (
-    Point("vehicle_telemetry")
-    .tag("vehicle_id", "bus_01")
-    .field("lat", 26.8467)
-    .field("lon", 80.9462)
-    .field("speed", 32.5)
-    .time(datetime.now(timezone.utc))
-)
-client.write(record=point)
-
-# read it back
-table = client.query(
-    "SELECT * FROM vehicle_telemetry ORDER BY time DESC LIMIT 5",
-    language="sql",
-)
-print(table.to_pandas())
+def get_client():
+    return client
