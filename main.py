@@ -48,6 +48,9 @@ def readings(
         AppException.time_valid()
     return bk.get_by_time(client, vehicle_id.upper(), start, end)
 
+
+@app.get("/vehicles/latest")
+
 @app.get("/health")
 def health(client: InfluxDBClient3 = Depends(get_client)):
     try:

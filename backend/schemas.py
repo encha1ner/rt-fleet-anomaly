@@ -7,7 +7,7 @@ PLATE_RE=re.compile(r"^[A-Z]{2}\d{2}[A-Z]{1,3}\d{4}$")
 class Telemetry(BaseModel):
     vehicle_id: str
     route_id:str
-    lat:float=Field(ge=26.0,le=28.0)
+    lat:float|None=Field(ge=26.0,le=28.0)
     lon:float=Field(ge=80.0,le=82.0) 
     speed:float=Field(ge=0,le=200)
 
