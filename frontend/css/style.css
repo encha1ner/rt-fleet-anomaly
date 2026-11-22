@@ -1,0 +1,695 @@
+/* style.css - redesign: "control room" look.
+   Idea: the visual language of Indian road signage. Deep signal navy, a hazard-stripe amber
+   accent, DIN-style numerals, and red / green used ONLY to mean anomalous / normal.
+   Sections: 1 Tokens, 2 Base, 3 Header, 4 Status areas, 5 Layout grid, 6 Fleet strip,
+   7 Panels, 8 Map, 8b Map markers, 9 Alerts, 10 Vehicle details, 11 Chart, 12 Footer.
+   NOTE: charts.js reads --color-selected, --color-anomaly, --color-border and --color-muted
+   from here, so keep those four names. */
+ 
+ 
+/* 1. TOKENS */
+:root {
+  --color-ink: #0e2238;          /* signal navy: header, fleet strip, headings */
+  --color-amber: #f5b301;        /* road-sign amber: the accent */
+  --color-bg: #dfe4e9;           /* concrete grey page background */
+  --color-surface: #ffffff;
+  --color-surface-alt: #f1f4f7;
+  --color-text: #0e2238;
+  --color-muted: #4a5b6e;
+  --color-border: #c4ceda;
+ 
+  --color-normal: #14804a;
+  --color-normal-bg: #e1f3e9;
+  --color-normal-border: #9fd2b5;
+ 
+  --color-anomaly: #c8281e;
+  --color-anomaly-bg: #fbe9e7;
+  --color-anomaly-border: #eeb1ab;
+ 
+  --color-selected: #1f5fd6;     /* selection ring, focus outline, chart line */
+  --color-warning-text: #2b1d00;
+  --color-warning-bg: #f5b301;
+ 
+  --font-display: "Bahnschrift", "DIN Alternate", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+ 
+  --radius: 6px;
+  --gap: 16px;
+  --map-height: 340px;
+  --edge: 0 2px 0 rgba(14, 34, 56, 0.14); /* a crisp lower edge instead of a soft blur */
+}
+ 
+ 
+/* 2. BASE */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+ 
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  line-height: 1.5;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+ 
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+ 
+/* Without this, the "hidden" attribute can lose against display rules */
+[hidden] {
+  display: none !important;
+}
+ 
+:focus-visible {
+  outline: 3px solid var(--color-selected);
+  outline-offset: 2px;
+}
+ 
+ 
+/* 3. HEADER (navy, with a hazard-stripe edge) */
+.app-header {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 14px var(--gap) 20px;
+  background: var(--color-ink);
+  color: #ffffff;
+}
+ 
+.app-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  background: repeating-linear-gradient(-45deg, var(--color-amber) 0, var(--color-amber) 10px, var(--color-ink) 10px, var(--color-ink) 20px);
+}
+ 
+.app-header h1 {
+  margin: 0;
+  font: 700 1.3rem/1.2 var(--font-display);
+  letter-spacing: 0.01em;
+}
+ 
+/* Logo mark: an amber tile with a navy dot, like a map pin */
+.app-header h1::before {
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  width: 30px;
+  height: 30px;
+  margin: -4px 12px 0 0;
+  border-radius: 8px;
+  background-color: var(--color-amber);
+  background-image: radial-gradient(circle at 50% 50%, var(--color-ink) 26%, transparent 28%);
+}
+ 
+.header-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+ 
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: var(--color-border);
+}
+ 
+.badge-mock {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+ 
+/* Connection badge: the text says the state, the lamp color repeats it.
+   JavaScript changes data-state; CSS reacts to it. */
+.badge-connection {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+ 
+.badge-connection::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--lamp, var(--color-amber));
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+}
+ 
+.badge-connection[data-state="connecting"] {
+  --lamp: var(--color-amber);
+}
+ 
+.badge-connection[data-state="connected"] {
+  --lamp: #4ade80;
+}
+ 
+.badge-connection[data-state="disconnected"] {
+  --lamp: #ff6b5e;
+}
+ 
+ 
+/* 4. LOADING AND ERROR AREAS */
+.loading-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px var(--gap);
+  font-weight: 600;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+ 
+.loading-message::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-selected);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+ 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+ 
+@media (prefers-reduced-motion: reduce) {
+  .loading-message::before {
+    animation: none;
+  }
+}
+ 
+.error-banner {
+  padding: 11px var(--gap);
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--color-anomaly);
+}
+ 
+ 
+/* 5. LAYOUT GRID (mobile first: ONE column; wider screens add columns)
+   grid-template-areas draws the layout as a picture. Each panel claims its area name. */
+.dashboard {
+  display: grid;
+  gap: var(--gap);
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: var(--gap);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "overview"
+    "map"
+    "alerts"
+    "details"
+    "chart";
+}
+ 
+.overview      { grid-area: overview; }
+.map-panel     { grid-area: map; }
+.alerts-panel  { grid-area: alerts; }
+.details-panel { grid-area: details; }
+.chart-panel   { grid-area: chart; }
+ 
+/* Tablet: two columns */
+@media (min-width: 700px) {
+  :root {
+    --map-height: 400px;
+  }
+ 
+  .dashboard {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "overview overview"
+      "map      map"
+      "alerts   details"
+      "chart    chart";
+  }
+}
+ 
+/* Desktop: three columns (map and chart each take two of the three) */
+@media (min-width: 1024px) {
+  :root {
+    --map-height: 460px;
+  }
+ 
+  .dashboard {
+    padding: 24px;
+    gap: 20px;
+    grid-template-areas:
+      "overview overview overview"
+      "map      map      alerts"
+      "details  chart    chart";
+  }
+ 
+  .app-header {
+    padding: 16px 24px 22px;
+  }
+}
+ 
+ 
+/* 6. FLEET STRIP: one instrument panel with four readouts, not four separate cards.
+   The 1px gaps between the readouts show the container color, which makes the dividers. */
+.overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius);
+  box-shadow: var(--edge);
+}
+ 
+/* Tablet and up: four readouts in one row. This rule must stay AFTER the base .overview rule
+   above, otherwise the base rule wins and the strip stays at two columns. */
+@media (min-width: 700px) {
+  .overview {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+ 
+.card {
+  padding: 12px 18px 16px;
+  color: #ffffff;
+  background: var(--color-ink);
+  border-top: 4px solid var(--card-accent, #9fb3c8);
+}
+ 
+.overview .card:nth-child(1) { --card-accent: #9fb3c8; }
+.overview .card:nth-child(2) { --card-accent: #6fa8ff; --card-number: #9fc4ff; }
+.card-normal    { --card-accent: #4ade80; --card-number: #6ee7a0; }
+.card-anomalous { --card-accent: #ff6b5e; --card-number: #ff8a7e; background: #2d1b27; }
+ 
+.card-label {
+  margin: 0;
+  font: 600 0.9rem/1.3 var(--font-body);
+  color: #c3d0de;
+}
+ 
+.card-value {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.1rem, 6vw, 2.9rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--card-number, #ffffff);
+}
+ 
+ 
+/* 7. PANELS */
+.panel {
+  min-width: 0;
+  padding: 14px 18px 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--edge);
+}
+ 
+/* Panel titles carry a small amber marker, the same one as the logo */
+.panel h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font: 700 1.1rem/1.3 var(--font-display);
+  color: var(--color-ink);
+}
+ 
+.panel h2::before {
+  content: "";
+  flex: none;
+  width: 5px;
+  height: 20px;
+  background: var(--color-amber);
+  border-radius: 1px;
+}
+ 
+.panel-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+ 
+.panel-heading h2 {
+  margin: 0;
+}
+ 
+.empty-state {
+  margin: 0;
+  padding: 18px 16px;
+  text-align: center;
+  color: var(--color-muted);
+  background: var(--color-surface-alt);
+  border: 1px dashed #aab6c4;
+  border-radius: var(--radius);
+}
+ 
+ 
+/* 8. MAP */
+#map {
+  position: relative;
+  z-index: 0; /* keeps Leaflet's internal layers from covering other page elements */
+  height: var(--map-height);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+ 
+.leaflet-container {
+  font-family: var(--font-body);
+}
+ 
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius);
+}
+ 
+.leaflet-popup-content {
+  margin: 10px 14px;
+  line-height: 1.45;
+}
+ 
+.popup-content strong {
+  display: block;
+  margin-bottom: 2px;
+  font: 700 1.1rem/1.2 var(--font-display);
+  color: var(--color-ink);
+}
+ 
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+ 
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+ 
+.legend-dot {
+  display: inline-block;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(14, 34, 56, 0.45);
+}
+ 
+.legend-normal {
+  background: var(--color-normal);
+}
+ 
+.legend-anomalous {
+  background: var(--color-anomaly);
+}
+ 
+.legend-selected {
+  background: var(--color-surface);
+  box-shadow: 0 0 0 2px var(--color-selected);
+}
+ 
+ 
+/* 8b. MAP MARKERS (map.js switches the classes is-normal / is-anomalous / is-selected) */
+.vehicle-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(14, 34, 56, 0.55), 0 3px 6px rgba(14, 34, 56, 0.35);
+  color: #ffffff;
+  font: 700 13px/1 var(--font-display);
+  cursor: pointer;
+}
+ 
+.vehicle-marker.is-normal {
+  background: var(--color-normal);
+}
+ 
+.vehicle-marker.is-anomalous {
+  background: var(--color-anomaly);
+}
+ 
+.vehicle-marker.is-selected {
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 5px var(--color-selected), 0 3px 8px rgba(14, 34, 56, 0.45);
+}
+ 
+/* A pulsing ring around anomalous vehicles, so they are easy to spot while they last */
+.vehicle-marker.is-anomalous::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 2px solid var(--color-anomaly);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: marker-pulse 1.6s ease-out infinite;
+}
+ 
+@keyframes marker-pulse {
+  from {
+    transform: scale(0.7);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+ 
+@media (prefers-reduced-motion: reduce) {
+  .vehicle-marker.is-anomalous::after {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+ 
+.popup-content div {
+  margin-top: 2px;
+}
+ 
+.map-fit-button {
+  display: block;
+  line-height: 1.2;
+  padding: 5px 10px;
+  font: 700 0.82rem var(--font-body);
+  color: #ffffff;
+  background: var(--color-ink);
+  border: 2px solid rgba(14, 34, 56, 0.35);
+  border-radius: 4px;
+  cursor: pointer;
+}
+ 
+.map-fit-button:hover {
+  background: #1c3752;
+}
+ 
+ 
+/* 9. ALERTS (alerts.js creates the <li class="alert-item"> rows and the filter bar) */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+ 
+.filter-button {
+  display: inline-block;
+  padding: 5px 10px;
+  font: 600 0.82rem var(--font-body);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid #9aa9b9;
+  border-radius: 4px;
+  cursor: pointer;
+}
+ 
+.filter-button:hover {
+  background: var(--color-surface-alt);
+}
+ 
+.filter-button.is-active {
+  color: #ffffff;
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+ 
+.filter-count {
+  display: inline-block;
+  min-width: 1.6em;
+  margin-left: 6px;
+  padding: 0 6px;
+  font: 700 0.78rem var(--font-display);
+  text-align: center;
+  background: var(--color-surface-alt);
+  border-radius: 3px;
+}
+ 
+.filter-button.is-active .filter-count {
+  color: var(--color-ink);
+  background: var(--color-amber);
+}
+ 
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0 4px 0 0;
+  list-style: none;
+  max-height: calc(var(--map-height) - 8rem); /* leaves room for the title and the filter bar */
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+ 
+.alert-item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-anomaly-border);
+  border-left: 6px solid var(--color-anomaly);
+  border-radius: var(--radius);
+  overflow: hidden;
+  /* Without this, the rows get squashed (and overlap) once the list is full:
+     flex items with overflow: hidden are allowed to shrink to nothing. */
+  flex-shrink: 0;
+}
+ 
+/* The clickable area is a real <button>, so keyboard users can reach it too. */
+.alert-item-button {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+ 
+.alert-item-button:hover {
+  background: var(--color-anomaly-bg);
+}
+ 
+.alert-item-title {
+  display: block;
+  font: 700 1.02rem/1.3 var(--font-display);
+  color: var(--color-anomaly);
+}
+ 
+.alert-item-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+ 
+ 
+/* 10. SELECTED VEHICLE DETAILS */
+.details-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  margin: 0;
+}
+ 
+.details-list dt,
+.details-list dd {
+  margin: 0;
+  padding: 9px 0;
+  border-bottom: 1px solid #dde3ea;
+}
+ 
+.details-list dt {
+  padding-right: 16px;
+  color: var(--color-muted);
+}
+ 
+.details-list dd {
+  text-align: right;
+  font: 700 1rem var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+ 
+/* The last row has no divider line */
+.details-list dt:last-of-type,
+.details-list dd:last-of-type {
+  border-bottom: 0;
+}
+ 
+.status-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font: 700 0.88rem var(--font-body);
+  color: #ffffff;
+}
+ 
+.status-pill.is-normal {
+  background: var(--color-normal);
+}
+ 
+.status-pill.is-anomalous {
+  background: var(--color-anomaly);
+}
+ 
+ 
+/* 11. SPEED CHART
+   Chart.js needs a wrapper with a fixed height and position: relative to size itself. */
+.chart-wrap {
+  position: relative;
+  height: 270px;
+}
+ 
+.chart-caption {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+ 
+ 
+/* 12. FOOTER */
+.app-footer {
+  padding: 8px var(--gap) 26px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+ 
+.app-footer p {
+  margin: 0;
+}
+ 

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicle Anomaly Detection Dashboard</title>
+
+  <!-- Leaflet stylesheet (pinned version) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <!-- Our own styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 1. HEADER: title, simulated-data label, connection status -->
+  <header class="app-header">
+    <h1>Vehicle Anomaly Detection Dashboard</h1>
+    <div class="header-status">
+      <span id="mock-banner" class="badge badge-mock" data-mock-only hidden>Simulated data</span>
+      <span id="connection-status" class="badge badge-connection" data-state="connecting" role="status">Connecting</span>
+    </div>
+  </header>
+
+  <!-- Loading and error areas. Hidden until JavaScript needs them. -->
+  <p id="loading-message" class="loading-message" hidden>Loading vehicle data...</p>
+  <div id="error-banner" class="error-banner" role="alert" hidden>
+    <strong>Problem:</strong> <span id="error-message"></span>
+  </div>
+
+  <main class="dashboard">
+
+    <!-- 2. OVERVIEW CARDS -->
+    <section class="overview" aria-label="Fleet overview">
+      <article class="card">
+        <h2 class="card-label">Total vehicles</h2>
+        <p id="count-total" class="card-value">--</p>
+      </article>
+      <article class="card">
+        <h2 class="card-label">Active vehicles</h2>
+        <p id="count-active" class="card-value">--</p>
+      </article>
+      <article class="card card-normal">
+        <h2 class="card-label">Normal vehicles</h2>
+        <p id="count-normal" class="card-value">--</p>
+      </article>
+      <article class="card card-anomalous">
+        <h2 class="card-label">Anomalous vehicles</h2>
+        <p id="count-anomalous" class="card-value">--</p>
+      </article>
+    </section>
+
+    <!-- 3. LIVE MAP (Leaflet draws inside #map in Phase 5) -->
+    <section class="panel map-panel" aria-labelledby="map-title">
+      <h2 id="map-title">Live vehicle map</h2>
+      <div id="map" role="region" aria-label="Map showing vehicle positions"></div>
+      <ul class="legend">
+        <li><span class="legend-dot legend-normal"></span> Normal</li>
+        <li><span class="legend-dot legend-anomalous"></span> Anomalous</li>
+        <li><span class="legend-dot legend-selected"></span> Selected</li>
+      </ul>
+    </section>
+
+    <!-- 4. ANOMALY ALERTS -->
+    <aside class="panel alerts-panel" aria-labelledby="alerts-title">
+      <h2 id="alerts-title">Anomaly alerts</h2>
+      <div id="alerts-filter" class="filter-bar" role="group" aria-label="Filter alerts by anomaly type">
+        <button type="button" class="filter-button is-active" data-filter="all" aria-pressed="true">All <span class="filter-count">0</span></button>
+        <button type="button" class="filter-button" data-filter="speed_spike" aria-pressed="false">Speed spike <span class="filter-count">0</span></button>
+        <button type="button" class="filter-button" data-filter="sudden_stop" aria-pressed="false">Sudden stop <span class="filter-count">0</span></button>
+        <button type="button" class="filter-button" data-filter="route_deviation" aria-pressed="false">Route deviation <span class="filter-count">0</span></button>
+      </div>
+      <p id="alerts-empty" class="empty-state">No anomalies detected.</p>
+      <ul id="alerts-list" class="alerts-list" aria-live="polite"></ul>
+    </aside>
+
+    <!-- 5. SELECTED VEHICLE DETAILS -->
+    <section class="panel details-panel" aria-labelledby="details-title">
+      <h2 id="details-title">Selected vehicle</h2>
+      <p id="details-empty" class="empty-state">Select a vehicle on the map to see its details.</p>
+      <dl id="vehicle-details" class="details-list" hidden>
+        <dt>Vehicle ID</dt>  <dd id="detail-id">--</dd>
+        <dt>Route</dt>       <dd id="detail-route">--</dd>
+        <dt>Speed</dt>       <dd id="detail-speed">--</dd>
+        <dt>Latitude</dt>    <dd id="detail-lat">--</dd>
+        <dt>Longitude</dt>   <dd id="detail-lon">--</dd>
+        <dt>Time</dt>        <dd id="detail-time">--</dd>
+        <dt>Status</dt>      <dd id="detail-status">--</dd>
+      </dl>
+    </section>
+
+    <!-- 6. SPEED CHART (Chart.js draws on the canvas in Phase 6) -->
+    <section class="panel chart-panel" aria-labelledby="chart-title">
+      <div class="panel-heading">
+        <h2 id="chart-title">Speed over time</h2>
+        <span id="chart-label" class="badge badge-mock" data-mock-only hidden>Simulated history</span>
+      </div>
+      <p id="chart-empty" class="empty-state">No speed data yet. Select a vehicle to see its speed history.</p>
+      <div id="chart-wrap" class="chart-wrap" hidden>
+        <canvas id="speed-chart" role="img" aria-label="Line chart of the selected vehicle's speed over time"></canvas>
+      </div>
+      <p id="chart-caption" class="chart-caption" hidden></p>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>Frontend dashboard. Simulated data is for frontend development only.</p>
+  </footer>
+
+  <!-- Libraries first: they create the global names L and Chart -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <!-- Our code last. type="module" turns on import/export -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
