@@ -1,0 +1,68 @@
+Here's a roadmap for the stack we settled on: Python simulator, InfluxDB 3, Isolation Forest, FastAPI + WebSocket, Leaflet map. Each phase ends with something working, so you can stop at any point with a usable project. The time estimates are for part-time work by one or two people, so adjust them.
+
+## Phase 0: Setup and planning (1-2 days)
+- Write the one-sentence problem statement and pick 3 anomaly types: sudden stop, speed spike, route deviation.
+- Create a Git repo with this layout: `simulator/`, `detector/`, `backend/`, `frontend/`, `docker-compose.yml`, `README.md`.
+- Use Docker Compose to run InfluxDB 3 Core. Confirm you can write and read one data point.
+- If you're two people, split the work: one on data and ML, one on backend and frontend.
+
+**Done when:** one hand-written point is stored and queried back.
+
+## Phase 1: Simulator (3-4 days)
+- Simulate 20-50 vehicles moving along predefined routes (a list of lat/lon waypoints around Lucknow works fine).
+- Send a JSON payload every 1-2 seconds: `vehicle_id, ts, lat, lon, speed`.
+- Add a fault injector with a known log of what was injected and when. You'll use this log to measure detection later.
+- Write the data into InfluxDB.
+
+**Done when:** you can see continuous data for all vehicles and a log of injected faults.
+
+## Phase 2: Feature engineering and exploration (3-4 days)
+- Query data back and look at it in a notebook.
+- Compute features per vehicle over a rolling window: speed, acceleration, distance since last point, heading change, time stopped, distance from the route.
+- Plot normal behavior against injected faults and check that the features actually separate them.
+
+**Done when:** you can show a chart where faults visibly stand out.
+
+## Phase 3: Detection (4-5 days)
+1. **Rule-based baseline first** (speed above a threshold, stopped for over N seconds). This is your benchmark.
+2. **Isolation Forest** trained on normal-only data, using your engineered features.
+3. Run the detector as a separate process every few seconds, reading the latest window and writing `anomaly_flag` and `score` back to InfluxDB.
+4. Evaluate against your fault log: how many were caught, how many false alarms, and how quickly.
+
+**Done when:** you have a table comparing rules against Isolation Forest, with precision and recall numbers.
+
+## Phase 4: Backend (3-4 days)
+- FastAPI endpoints: `/vehicles/latest` (one row per vehicle) and `/vehicles/{id}/history`.
+- A WebSocket endpoint that pushes updated positions and flags to connected browsers.
+- Query only the latest state, not full history.
+
+**Done when:** a WebSocket test client receives live updates.
+
+## Phase 5: Frontend (3-4 days)
+- A Leaflet map with one marker per vehicle that moves as updates arrive.
+- Markers turn red on anomaly, with a side panel listing active alerts (vehicle, type, time).
+- Click a vehicle to see its recent speed chart.
+
+**Done when:** you can watch a fault get injected and a marker turn red within seconds.
+
+## Phase 6: Hardening and polish (3-5 days)
+- Measure latency from event to red marker and report the real number.
+- Load test by raising the vehicle count to see where it breaks.
+- Write the README with architecture diagram, setup steps, results, and known limitations.
+- Record a short demo video or GIF.
+
+## Optional extensions
+- Put Kafka or MQTT between simulator and database.
+- Use real GPS data, for example public GPS trace datasets.
+- Add geofencing, or compare TimescaleDB + PostGIS against InfluxDB.
+- Deploy a demo version online.
+
+## Rules to follow throughout
+- Commit at the end of each phase and tag it.
+- Don't start the next phase until the current one's "done when" is true.
+- Keep a short log of problems you hit and how you fixed them.
+- Report honest numbers. A real 2-second latency is a better interview answer than a claimed "milliseconds."
+
+Total is roughly 4-5 weeks at a relaxed pace. If you're short on time, Phases 0-3 plus a basic map give you a solid project.
+
+Do you want me to start with Phase 0 and write the Docker Compose file and repo structure?
