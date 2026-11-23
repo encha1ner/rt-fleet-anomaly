@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from influxdb_client_3 import InfluxDBClient3, Point
 from backend.schemas import Telemetry,Anomaly
 from typing import List
-import pandas as pd
+import pandas
 
 
 logger=logging.getLogger(__name__)
@@ -150,10 +150,7 @@ def anomaly_history(client: InfluxDBClient3):
         return
 
     rows.to_csv("anomaly_history.csv", index=False)
-
     return rows
-
-
 
 def dashboard_summary(client: InfluxDBClient3):
 

@@ -21,3 +21,23 @@ class Telemetry(BaseModel):
         return v
 
 
+
+class Anomaly(BaseModel):
+    vehicle_id: str
+    ts: datetime
+    anomaly: bool
+    score: float
+    anomaly_type: str
+
+
+    @field_validator("vehicle_id")
+    @classmethod
+    def normalize_plate(cls, v: str) -> str:
+        v = re.sub(r"[\s-]", "", v).upper()
+        if not PLATE_RE.match(v):
+            raise ValueError("invalid registration plate")
+        return v
+
+
+class AnomalyBatch(BaseModel):
+    anomalies: list[Anomaly]
